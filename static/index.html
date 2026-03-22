@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EdTech Grader Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- VIEW 1: Input -->
+    <div class="container" id="input-view">
+        <header>
+            <h1>AI Grading Assistant</h1>
+            <p class="subtitle">Upload or take a photo of a response sheet to grade it</p>
+        </header>
+
+        <div class="input-section">
+            <div class="media-row">
+                <div class="upload-zone" id="upload-zone">
+                    <input type="file" id="file-input" accept="image/*" hidden>
+                    <div class="upload-content">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <p>Upload Image</p>
+                    </div>
+                </div>
+                <!-- Camera Button -->
+                <div class="camera-zone" id="camera-btn">
+                    <div class="upload-content">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                        <p>Take Photo</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="camera-container" style="display: none;">
+                <video id="video-feed" autoplay playsinline></video>
+                <button id="capture-btn" class="btn secondary">Capture Image</button>
+            </div>
+
+            <p class="file-name" id="file-name"></p>
+
+            <div class="concepts-box">
+                <label for="concepts-input">Expected Concepts (One per line)</label>
+                <textarea id="concepts-input" rows="5" placeholder="You need to know how much vinegar was used...&#10;You need to know what type of vinegar was used..."></textarea>
+            </div>
+
+            <button id="grade-btn" class="btn primary">
+                <span class="btn-text">Grade Response</span>
+                <span class="loader" id="loader" style="display:none;"></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- VIEW 2: Results -->
+    <div class="container" id="result-view" style="display:none;">
+        <header>
+            <div class="header-row">
+                <button id="back-btn" class="icon-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Back
+                </button>
+                <h2>Grading Results</h2>
+                <div style="width: 80px;"></div>
+            </div>
+        </header>
+
+        <div class="scores-grid">
+            <div class="score-card">
+                <h3>Similarity</h3>
+                <div class="score-value" id="sim-score">0.0</div>
+            </div>
+            <div class="score-card">
+                <h3>Keyword</h3>
+                <div class="score-value" id="key-score">0.0</div>
+            </div>
+            <div class="score-card final-score">
+                <h3>Final Score</h3>
+                <div class="score-value" id="final-score">0.0</div>
+            </div>
+        </div>
+
+        <div class="text-results">
+            <div class="result-block">
+                <h4>OCR Extracted Text</h4>
+                <div class="ocr-box" id="ocr-text"></div>
+            </div>
+
+            <div class="concepts-lists">
+                <div class="matched-box">
+                    <h4>Matched Concepts</h4>
+                    <ul id="matched-list" class="check-list"></ul>
+                </div>
+                <div class="missing-box">
+                    <h4>Missing Concepts</h4>
+                    <ul id="missing-list" class="cross-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/static/script.js"></script>
+</body>
+</html>
