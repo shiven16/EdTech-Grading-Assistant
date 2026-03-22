@@ -1,13 +1,14 @@
 import json
 from src.grader import grade_answer
+from src.ocr import extract_text_from_image
+
 
 
 def run_pipeline():
-    # Load ONLY valid dataset
+    # Load dataset
     with open("data/processed/valid_dataset.json", "r") as f:
         dataset = json.load(f)
 
-    # Pick first valid dataset
     sample = dataset[0]
 
     print("\nQUESTION:")
@@ -15,17 +16,15 @@ def run_pipeline():
 
     concepts = sample["concepts"]
 
-    # Sample student answer
-    student_answer = (
-        "To replicate the experiment, you need to know how much vinegar was used, "
-        "what type of vinegar was used, what materials were tested, "
-        "the surface area of the materials, and how long each sample was rinsed."
-    )
+    #OCR INPUT
+    image_path = "data/Edtech_grading_file.jpeg"
+
+    student_answer = extract_text_from_image(image_path)
+
+    print("\nOCR EXTRACTED TEXT:")
+    print(student_answer)
 
     result = grade_answer(concepts, student_answer)
-
-    print("\nSTUDENT ANSWER:")
-    print(student_answer)
 
     print("\nRESULT:")
     print("Keyword Score:", round(result["keyword_score"], 2))
@@ -34,12 +33,13 @@ def run_pipeline():
 
     print("\nMatched Concepts:")
     for c in result["matched_concepts"]:
-        print("✔", c)
+        print(":heavy_check_mark:", c)
 
     print("\nMissing Concepts:")
     for c in concepts:
         if c not in result["matched_concepts"]:
             print("✘", c)
+
 
 
 if __name__ == "__main__":
