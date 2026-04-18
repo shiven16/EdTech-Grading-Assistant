@@ -1,0 +1,71 @@
+[
+  {
+    "dataset_id": "Data Set #1--ReadMeFirst.docx",
+    "question": "Prompt\u2014Acid Rain",
+    "concepts": [
+      "You need to know how much vinegar was used in each container.",
+      "You need to know what type of vinegar was used in each container.",
+      "You need to know what materials to test.",
+      "You need to know what size/surface area of materials should be used.",
+      "You need to know how long each sample was rinsed in distilled water.",
+      "You need to know what drying method to use.",
+      "You need to know what size/type of container to use.",
+      "Other acceptable responses."
+    ],
+    "type": "concept_based"
+  },
+  {
+    "dataset_id": "Data Set #10--ReadMeFirst.docx",
+    "question": "Prompt\u2014Doghouse Item",
+    "concepts": [],
+    "type": "unknown"
+  },
+  {
+    "dataset_id": "Data Set #2--ReadMeFirst.docx",
+    "question": "Prompt\u2014Polymer Investigation",
+    "concepts": [],
+    "type": "unknown"
+  },
+  {
+    "dataset_id": "Data Set #3--ReadMeFirst.docx",
+    "question": "Prompt\u2014Koala/Panda Item",
+    "concepts": [],
+    "type": "unknown"
+  },
+  {
+    "dataset_id": "Data Set #4--ReadMeFirst.docx",
+    "question": "Prompt\u2014Invasive Species Item",
+    "concepts": [],
+    "type": "unknown"
+  },
+  {
+    "dataset_id": "Data Set #5--ReadMeFirst.docx",
+    "question": "Prompt\u2014Protein Synthesis Item",
+    "concepts": [],
+    "type": "unknown"
+  },
+  {
+    "dataset_id": "Data Set #6--ReadMeFirst.docx",
+    "question": "Prompt\u2014Cell Membrane Item",
+    "concepts": [],
+    "type": "unknown"
+  },
+  {
+    "dataset_id": "Data Set #7--ReadMeFirst.docx",
+    "question": "Prompt\u2014Trait of Rose Item",
+    "concepts": [],
+    "type": "unknown"
+  },
+  {
+    "dataset_id": "Data Set #8--ReadMeFirst.docx",
+    "question": "Prompt\u2014Mr. Leonard Item",
+    "concepts": [],
+    "type": "unknown"
+  },
+  {
+    "dataset_id": "Data Set #9--ReadMeFirst.docx",
+    "question": "Prompt\u2014Organization of Article Item",
+    "concepts": [],
+    "type": "unknown"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "dataset_id": "Data Set #1--ReadMeFirst.docx",
+    "question": "Prompt\u2014Acid Rain",
+    "concepts": [
+      "You need to know how much vinegar was used in each container.",
+      "You need to know what type of vinegar was used in each container.",
+      "You need to know what materials to test.",
+      "You need to know what size/surface area of materials should be used.",
+      "You need to know how long each sample was rinsed in distilled water.",
+      "You need to know what drying method to use.",
+      "You need to know what size/type of container to use.",
+      "Other acceptable responses."
+    ],
+    "type": "concept_based"
+  }
+]
