@@ -195,7 +195,7 @@ def post_process(text: str) -> str:
 
 def extract_text_from_image(
     image_path: str,
-    engine: str = "tesseract"   # swap to "trocr" when ready
+    engine: str = "trocr"
 ) -> str:
     """
     Main entry point.

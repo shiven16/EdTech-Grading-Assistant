@@ -3,102 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EdTech Grader Demo</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>GradeAI — Intelligent Answer Grader</title>
+    <meta name="description" content="AI-powered handwritten answer grading using BERT deep learning and OCR. Upload answer sheets and get instant, accurate scores.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <!-- VIEW 1: Input -->
-    <div class="container" id="input-view">
-        <header>
-            <h1>AI Grading Assistant</h1>
-            <p class="subtitle">Upload or take a photo of a response sheet to grade it</p>
-        </header>
 
-        <div class="input-section">
-            <div class="media-row">
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  BACKGROUND EFFECTS                                     -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow glow-1"></div>
+    <div class="bg-glow glow-2"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  NAV                                                    -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <nav class="nav">
+        <div class="nav-brand">
+            <div class="nav-logo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+            </div>
+            <span class="nav-brand-text">GradeAI</span>
+        </div>
+        <div class="nav-status">
+            <span class="status-dot" id="status-dot"></span>
+            <span class="status-label" id="status-label">Checking model…</span>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  HERO                                                   -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section class="hero">
+        <div class="hero-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            BERT · Deep Learning · Phase 2
+        </div>
+        <h1 class="hero-title">Grade Answers<br><span class="gradient-text">Intelligently</span></h1>
+        <p class="hero-subtitle">Upload a handwritten answer sheet. Our OCR + BERT pipeline extracts the text and grades it against your reference answer in seconds.</p>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  MODE SWITCHER                                          -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="mode-switcher-wrapper">
+        <div class="mode-switcher" id="mode-switcher">
+            <button class="mode-btn active" data-mode="image" id="btn-image-mode">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                Image Upload
+            </button>
+            <button class="mode-btn" data-mode="text" id="btn-text-mode">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>
+                Type Answer
+            </button>
+            <div class="mode-indicator"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  MAIN CARD                                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <main class="main-card" id="main-card">
+
+        <!-- ── MODEL NOT READY BANNER ────────────────────────── -->
+        <div class="not-ready-banner" id="not-ready-banner" style="display:none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            BERT model not trained yet. Run:
+            <code>python src/phase2/BERT_method/train.py</code>
+        </div>
+
+        <!-- ── FORM ───────────────────────────────────────────── -->
+        <form id="grade-form" autocomplete="off">
+
+            <!-- Question -->
+            <div class="field-group">
+                <label for="question-input" class="field-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    Exam Question
+                </label>
+                <textarea id="question-input" class="field-textarea" rows="2" placeholder="e.g. What is photosynthesis?" required></textarea>
+            </div>
+
+            <!-- Reference Answer -->
+            <div class="field-group">
+                <label for="reference-input" class="field-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Reference Answer
+                </label>
+                <textarea id="reference-input" class="field-textarea" rows="3" placeholder="The ideal / model answer…" required></textarea>
+            </div>
+
+            <!-- IMAGE MODE: upload zone -->
+            <div id="image-mode-fields">
+                <label class="field-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Answer Sheet Image
+                </label>
                 <div class="upload-zone" id="upload-zone">
                     <input type="file" id="file-input" accept="image/*" hidden>
-                    <div class="upload-content">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                        <p>Upload Image</p>
+                    <div class="upload-inner" id="upload-inner">
+                        <div class="upload-icon">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        </div>
+                        <p class="upload-title">Drop image here</p>
+                        <p class="upload-sub">or <span class="upload-link">browse files</span> · JPG, PNG, HEIC</p>
                     </div>
+                    <img id="preview-img" class="preview-img" alt="Preview" style="display:none;">
                 </div>
-                <!-- Camera Button -->
-                <div class="camera-zone" id="camera-btn">
-                    <div class="upload-content">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                        <p>Take Photo</p>
-                    </div>
+
+                <!-- Camera strip -->
+                <div class="camera-strip" id="camera-strip" style="display:none;">
+                    <video id="video-feed" autoplay playsinline></video>
+                    <button type="button" id="capture-btn" class="capture-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                        Capture
+                    </button>
+                    <canvas id="snap-canvas" style="display:none;"></canvas>
+                </div>
+
+                <div class="upload-actions">
+                    <button type="button" id="camera-btn" class="ghost-btn">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        Use Camera
+                    </button>
+                    <span class="file-name-label" id="file-name-label"></span>
                 </div>
             </div>
 
-            <div id="camera-container" style="display: none;">
-                <video id="video-feed" autoplay playsinline></video>
-                <button id="capture-btn" class="btn secondary">Capture Image</button>
+            <!-- TEXT MODE: typed answer -->
+            <div id="text-mode-fields" style="display:none;">
+                <div class="field-group">
+                    <label for="student-text-input" class="field-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Student's Answer
+                    </label>
+                    <textarea id="student-text-input" class="field-textarea" rows="5" placeholder="Type or paste the student's answer here…"></textarea>
+                </div>
             </div>
 
-            <p class="file-name" id="file-name"></p>
-
-            <div class="concepts-box">
-                <label for="concepts-input">Expected Concepts (One per line)</label>
-                <textarea id="concepts-input" rows="5" placeholder="You need to know how much vinegar was used...&#10;You need to know what type of vinegar was used..."></textarea>
+            <!-- Max Marks -->
+            <div class="field-row">
+                <div class="field-group field-narrow" style="flex: 1;">
+                    <label for="max-marks-input" class="field-label">Max Marks</label>
+                    <input type="number" id="max-marks-input" class="field-input" value="10" min="1" max="100" step="0.5">
+                </div>
             </div>
 
-            <button id="grade-btn" class="btn primary">
-                <span class="btn-text">Grade Response</span>
-                <span class="loader" id="loader" style="display:none;"></span>
+            <!-- Submit -->
+            <button type="submit" class="grade-btn" id="grade-btn">
+                <span class="grade-btn-text">Grade Answer</span>
+                <div class="grade-btn-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </div>
+                <div class="btn-spinner" id="btn-spinner" style="display:none;"></div>
             </button>
-        </div>
-    </div>
 
-    <!-- VIEW 2: Results -->
-    <div class="container" id="result-view" style="display:none;">
-        <header>
-            <div class="header-row">
-                <button id="back-btn" class="icon-btn">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                    Back
-                </button>
-                <h2>Grading Results</h2>
-                <div style="width: 80px;"></div>
-            </div>
-        </header>
+        </form>
+    </main>
 
-        <div class="scores-grid">
-            <div class="score-card">
-                <h3>Similarity</h3>
-                <div class="score-value" id="sim-score">0.0</div>
-            </div>
-            <div class="score-card">
-                <h3>Keyword</h3>
-                <div class="score-value" id="key-score">0.0</div>
-            </div>
-            <div class="score-card final-score">
-                <h3>Final Score</h3>
-                <div class="score-value" id="final-score">0.0</div>
-            </div>
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  RESULTS PANEL                                          -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section class="results-panel" id="results-panel" style="display:none;">
+
+        <div class="results-header">
+            <button class="back-btn" id="back-btn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                Grade Another
+            </button>
+            <h2 class="results-title">Grading Results</h2>
+            <div class="results-badge">BERT · AI</div>
         </div>
 
-        <div class="text-results">
-            <div class="result-block">
-                <h4>OCR Extracted Text</h4>
-                <div class="ocr-box" id="ocr-text"></div>
-            </div>
-
-            <div class="concepts-lists">
-                <div class="matched-box">
-                    <h4>Matched Concepts</h4>
-                    <ul id="matched-list" class="check-list"></ul>
-                </div>
-                <div class="missing-box">
-                    <h4>Missing Concepts</h4>
-                    <ul id="missing-list" class="cross-list"></ul>
-                </div>
+        <!-- Score ring -->
+        <div class="score-ring-wrapper">
+            <svg class="score-ring" viewBox="0 0 160 160" width="160" height="160">
+                <circle class="ring-bg"   cx="80" cy="80" r="68" />
+                <circle class="ring-fill" cx="80" cy="80" r="68" id="ring-fill" />
+            </svg>
+            <div class="score-ring-inner">
+                <div class="score-number" id="score-number">0</div>
+                <div class="score-denom" id="score-denom">/ 10</div>
+                <div class="score-pct" id="score-pct">0%</div>
             </div>
         </div>
-    </div>
-    
+
+        <!-- Score breakdown -->
+        <div class="score-breakdown">
+            <div class="score-bar-label">
+                <span>Score</span>
+                <span id="bar-score-label">0 / 10</span>
+            </div>
+            <div class="score-bar-track">
+                <div class="score-bar-fill" id="score-bar-fill"></div>
+            </div>
+        </div>
+
+        <!-- Grade label -->
+        <div class="grade-chip-wrapper">
+            <div class="grade-chip" id="grade-chip"></div>
+        </div>
+
+        <!-- OCR text -->
+        <div class="result-block">
+            <div class="result-block-header">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Extracted Text (OCR)
+            </div>
+            <div class="result-block-content ocr-content" id="ocr-content"></div>
+        </div>
+
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--  TOAST                                                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="toast" id="toast"></div>
+
     <script src="/static/script.js"></script>
 </body>
 </html>

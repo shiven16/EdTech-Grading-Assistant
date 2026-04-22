@@ -16,10 +16,11 @@ class SciDataset(Dataset):
     def __getitem__(self, idx):
         item = self.data[idx]
 
-        question = item["question"]
-        ref = item["reference_answer"]
-        student = item["student_answer"]
-        label = item["label"]
+        # Guard against None / NaN values coming from CSV
+        question = str(item["question"] or "")
+        ref      = str(item["reference_answer"] or "")
+        student  = str(item["student_answer"] or "")
+        label    = item["label"]
 
         text = f"{question} [SEP] {ref} [SEP] {student}"
 
@@ -34,7 +35,7 @@ class SciDataset(Dataset):
         score = label_to_score(label)
 
         return {
-            "input_ids": encoding["input_ids"].squeeze(0),
+            "input_ids":      encoding["input_ids"].squeeze(0),
             "attention_mask": encoding["attention_mask"].squeeze(0),
-            "labels": torch.tensor(score, dtype=torch.float)
+            "labels":         torch.tensor(score, dtype=torch.float)
         }
