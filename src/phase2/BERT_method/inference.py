@@ -63,6 +63,21 @@ def predict(question: str, ref_answer: str, student_answer: str, max_marks: floa
     """
     _load_model()
 
+    # ── Fallback exactly matching logic (ignore spaces/punctuation/case) ──
+    import re
+    def normalize_text(t: str) -> str:
+        return re.sub(r'[^a-zA-Z0-9]', '', t).lower()
+        
+    s_norm = normalize_text(student_answer)
+    r_norm = normalize_text(ref_answer)
+    
+    if s_norm == r_norm and s_norm != "":
+        return {
+            "score":      max_marks,
+            "max_marks":  max_marks,
+            "percentage": 100.0,
+        }
+
     text = f"{question} [SEP] {ref_answer} [SEP] {student_answer}"
 
     encoding = _tokenizer(

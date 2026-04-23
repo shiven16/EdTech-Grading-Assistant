@@ -14,14 +14,24 @@ logger = logging.getLogger(__name__)
 
 def deskew(image: np.ndarray) -> np.ndarray:
     """Correct skewed/tilted scans before OCR."""
-    coords = np.column_stack(np.where(image < 200))
+    # Convert to grayscale to find dark pixels for bounding rect
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+        
+    coords = np.column_stack(np.where(gray < 200))
     if len(coords) == 0:
         return image
+        
+    # minAreaRect expects (N, 2) coords
     angle = cv2.minAreaRect(coords)[-1]
     angle = -(90 + angle) if angle < -45 else -angle
+    
     (h, w) = image.shape[:2]
     center = (w // 2, h // 2)
     M = cv2.getRotationMatrix2D(center, angle, 1.0)
+    
     return cv2.warpAffine(
         image, M, (w, h),
         flags=cv2.INTER_CUBIC,
@@ -116,40 +126,38 @@ def extract_text_tesseract(image_path: str) -> str:
 def extract_text_trocr(image_path: str) -> str:
     """
     TrOCR-based extraction with PaddleOCR for line detection.
-
-    Switch to this when Tesseract accuracy is insufficient.
-    First run will download ~1.3 GB of model weights.
     """
     from transformers import TrOCRProcessor, VisionEncoderDecoderModel
     from paddleocr import PaddleOCR
     import torch
 
-    # ── One-time model load (cache after first call in production) ──
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    processor = TrOCRProcessor.from_pretrained(
-        "microsoft/trocr-large-handwritten"
-    )
-    model = VisionEncoderDecoderModel.from_pretrained(
-        "microsoft/trocr-large-handwritten"
-    ).to(device)
+    processor = TrOCRProcessor.from_pretrained("microsoft/trocr-large-handwritten")
+    model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-large-handwritten").to(device)
     model.eval()
 
-    detector = PaddleOCR(use_angle_cls=True, lang="en",
-                         rec=False, show_log=False)
+    detector = PaddleOCR(use_angle_cls=True, lang="en", rec=False, show_log=False)
 
-    # ── Preprocessing ──
-    processed = preprocess_image(image_path)
-
-    # ── Line detection (PaddleOCR handles layout) ──
-    result = detector.ocr(processed, rec=False)
+    img = cv2.imread(image_path)
+    if img is None: return ""
+    
+    # 1. Straighten the full-color image first
+    deskewed_bgr = deskew(img)
+    
+    # 2. Binarize purely for PaddleOCR to find the boxes easily
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    gray = cv2.cvtColor(deskewed_bgr, cv2.COLOR_BGR2GRAY)
+    gray = clahe.apply(gray)
+    denoised = cv2.fastNlMeansDenoising(gray, h=10, searchWindowSize=21)
+    binary = cv2.adaptiveThreshold(denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 31, 10)
+    
+    result = detector.ocr(binary, rec=False)
     if not result or result[0] is None:
-        logger.warning("No text regions detected.")
         return ""
 
     boxes = sorted(result[0], key=lambda b: b[0][1])  # top → bottom
-    h, w = processed.shape[:2]
+    h, w = deskewed_bgr.shape[:2]
 
-    # ── Per-line recognition (TrOCR) ──
     recognized_lines = []
     for box in boxes:
         pts = np.array(box, dtype=np.int32)
@@ -158,22 +166,23 @@ def extract_text_trocr(image_path: str) -> str:
         y1 = max(0, pts[:, 1].min() - 4)
         y2 = min(h, pts[:, 1].max() + 4)
 
-        crop = Image.fromarray(processed[y1:y2, x1:x2]).convert("RGB")
-        pixel_values = processor(
-            images=crop, return_tensors="pt"
-        ).pixel_values.to(device)
+        # 3. Crop from the original color image, NOT the binarized one!
+        crop_bgr = deskewed_bgr[y1:y2, x1:x2]
+        if crop_bgr.shape[0] == 0 or crop_bgr.shape[1] == 0: continue
+            
+        crop_rgb = cv2.cvtColor(crop_bgr, cv2.COLOR_BGR2RGB)
+        crop = Image.fromarray(crop_rgb)
+        
+        pixel_values = processor(images=crop, return_tensors="pt").pixel_values.to(device)
 
         with torch.no_grad():
-            ids = model.generate(
-                pixel_values,
-                max_new_tokens=128,
-                num_beams=4,
-                early_stopping=True
-            )
+            ids = model.generate(pixel_values, max_new_tokens=128, num_beams=4, early_stopping=True)
+            
         line = processor.batch_decode(ids, skip_special_tokens=True)[0]
         recognized_lines.append(line.strip())
 
-    return "\n".join(recognized_lines)
+    # Join with a space instead of a newline to form normal continuous text
+    return " ".join(recognized_lines)
 
 
 # ─────────────────────────────────────────────
@@ -183,9 +192,9 @@ def extract_text_trocr(image_path: str) -> str:
 def post_process(text: str) -> str:
     """Normalize whitespace and remove garbage characters."""
     import re
-    text = re.sub(r' {2,}', ' ', text)          # collapse multiple spaces
-    text = re.sub(r'\n{3,}', '\n\n', text)       # collapse blank lines
+    text = re.sub(r' +', ' ', text)             # collapse multiple spaces
     text = re.sub(r'[^\x20-\x7E\n]', '', text)  # strip non-ASCII artifacts
+    text = re.sub(r'\n+', ' ', text)            # ensure no stray newlines remain
     return text.strip()
 
 
