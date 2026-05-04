@@ -1,5 +1,7 @@
-from src.preprocess import clean_text
-
+try:
+    from src.phase1.preprocess import clean_text
+except ImportError:
+    from src.preprocess import clean_text
 def concept_match_score(concepts, student_answer):
     student_words = set(clean_text(student_answer).split())
 

@@ -15,5 +15,4 @@ pandas
 Pillow
 scipy
 accelerate
-paddlepaddle
-paddleocr
+easyocr

@@ -6,10 +6,10 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 
-# ── Phase 2 imports ───────────────────────────────────────────────────────────
+# ── Phase 3 (Hybrid) imports ───────────────────────────────────────────────────────────
 import sys
-sys.path.insert(0, str(Path(__file__).resolve().parent / "src" / "phase2"))
-from grader_pipeline import grade_with_bert, grade_text_with_bert, is_ready
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src" / "phase3"))
+from hybrid_pipeline import grade_with_hybrid, grade_text_with_hybrid, is_ready
 
 # ── Phase 1 import (kept intact) ──────────────────────────────────────────────
 try:
@@ -20,7 +20,7 @@ except ImportError:
     _PHASE1_AVAILABLE = False
 
 
-app = FastAPI(title="EdTech Grading Assistant — Phase 2")
+app = FastAPI(title="EdTech Grading Assistant — Phase 3")
 
 os.makedirs("static", exist_ok=True)
 os.makedirs("uploads", exist_ok=True)
@@ -37,7 +37,7 @@ async def read_root():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Phase 2 — BERT grading (image upload → OCR → BERT)
+# Phase 3 — Hybrid grading (image upload → OCR → Meta-Regressor)
 # ─────────────────────────────────────────────────────────────────────────────
 
 @app.post("/api/grade/bert")
@@ -48,11 +48,11 @@ async def grade_bert(
     max_marks: float = Form(10.0),
     ocr_engine: str = Form("trocr"),
 ):
-    """Grade a scanned handwritten answer using OCR + BERT."""
+    """Grade a scanned handwritten answer using OCR + Phase 3 Hybrid."""
     if not is_ready():
         raise HTTPException(
             status_code=503,
-            detail="BERT model not trained yet. Run: python src/phase2/BERT_method/train.py"
+            detail="Hybrid model not ready. Train BERT and the Meta-Regressor first."
         )
 
     # Save uploaded image to a temp location
@@ -62,7 +62,7 @@ async def grade_bert(
         with open(tmp_path, "wb") as f:
             shutil.copyfileobj(image.file, f)
 
-        result = grade_with_bert(
+        result = grade_with_hybrid(
             image_path=tmp_path,
             question=question,
             reference_answer=reference_answer,
@@ -72,10 +72,11 @@ async def grade_bert(
         return JSONResponse({"success": True, **result})
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
     finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+        pass
 
 
 @app.post("/api/grade/bert/text")
@@ -85,12 +86,12 @@ async def grade_bert_text(
     reference_answer: str = Form(...),
     max_marks: float = Form(10.0),
 ):
-    """Grade a typed (no image) answer using BERT only."""
+    """Grade a typed (no image) answer using Phase 3 Hybrid only."""
     if not is_ready():
-        raise HTTPException(status_code=503, detail="BERT model not trained yet.")
+        raise HTTPException(status_code=503, detail="Hybrid model not trained yet.")
 
     try:
-        result = grade_text_with_bert(
+        result = grade_text_with_hybrid(
             student_answer=student_answer,
             question=question,
             reference_answer=reference_answer,
@@ -98,16 +99,19 @@ async def grade_bert_text(
         )
         return JSONResponse({"success": True, **result})
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 
 @app.get("/api/status")
 async def status():
-    """Health-check — tells frontend whether BERT model is ready."""
+    """Health-check — tells frontend whether Hybrid model is ready."""
     return JSONResponse({
         "bert_ready": is_ready(),
         "phase1_available": _PHASE1_AVAILABLE,
     })
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────

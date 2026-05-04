@@ -34,6 +34,7 @@ const uploadZone    = document.getElementById('upload-zone');
 const uploadInner   = document.getElementById('upload-inner');
 const previewImg    = document.getElementById('preview-img');
 const fileNameLabel = document.getElementById('file-name-label');
+const removeImgBtn  = document.getElementById('remove-img-btn');
 const cameraBtn     = document.getElementById('camera-btn');
 const cameraStrip   = document.getElementById('camera-strip');
 const videoFeed     = document.getElementById('video-feed');
@@ -157,7 +158,19 @@ function showPreview(url) {
     previewImg.style.display = 'block';
     uploadInner.style.display = 'none';
     uploadZone.classList.add('has-image');
+    removeImgBtn.style.display = 'inline-flex';
 }
+
+removeImgBtn.addEventListener('click', () => {
+    fileInput.value = '';
+    capturedImageBlob = null;
+    fileNameLabel.textContent = '';
+    previewImg.src = '';
+    previewImg.style.display = 'none';
+    uploadInner.style.display = 'flex';
+    uploadZone.classList.remove('has-image');
+    removeImgBtn.style.display = 'none';
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Camera

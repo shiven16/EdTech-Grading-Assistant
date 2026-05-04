@@ -1,7 +1,11 @@
-from src.keyword_baseline import concept_match_score
-from src.tfidf_advanced import concept_similarity_score
-from src.utils import final_score
-
+try:
+    from src.phase1.keyword_baseline import concept_match_score
+    from src.phase1.tfidf_advanced import concept_similarity_score
+    from src.phase1.utils import final_score
+except ImportError:
+    from src.keyword_baseline import concept_match_score
+    from src.tfidf_advanced import concept_similarity_score
+    from src.utils import final_score
 
 def grade_answer(concepts, student_answer):
     k_score, matched, all_concepts = concept_match_score(concepts, student_answer)
